@@ -1,47 +1,69 @@
 package com.alecbakholdin.boggle.service;
 
-import com.alecbakholdin.boggle.data.BoggleGameMap;
-import com.alecbakholdin.boggle.model.BoggleGame;
+
+import com.alecbakholdin.boggle.data.LobbyMap;
+import com.alecbakholdin.boggle.model.AddWordRequest;
+import com.alecbakholdin.boggle.model.GameStatus;
+import com.alecbakholdin.boggle.model.Lobby;
+import com.alecbakholdin.boggle.model.Player;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
 
-import javax.servlet.http.HttpSession;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Log4j2
-@RestController
-@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
+@Controller
 @AllArgsConstructor
 public class BoggleGameController {
-    private final BoggleGameMap boggleGameMap;
-    private static final String GAME_ID_ATTRIBUTE = "BoggleGameId";
+    private final SimpMessagingTemplate simpMessagingTemplate;
+    private final LobbyMap lobbyMap;
 
-    @GetMapping("/game/create")
-    public BoggleGame createGame(HttpSession session) {
-        BoggleGame newGame = new BoggleGame(boggleGameMap.getNewId());
-        boggleGameMap.put(newGame.getId(), newGame);
-        session.setAttribute(GAME_ID_ATTRIBUTE, newGame);
-        return newGame;
+
+    @MessageMapping("/startGame")
+    public void startGame(@Payload String lobbyId) {
+        log.info("New lobby start request: " + lobbyId);
+        Lobby lobby = lobbyMap.get(lobbyId);
+        if (lobby == null) {
+            return;
+        }
+        lobby.startNewGame();
+        int gameDuration = 5 * 1000;
+        lobby.getGame().setGameOverTime(System.currentTimeMillis() + gameDuration);
+        scheduleEndGame(lobby, gameDuration);
+
+        simpMessagingTemplate.convertAndSend(lobby.getLobbyTopic("/startGame"), lobby.getGame());
     }
 
-    @GetMapping("/game/{id}")
-    public BoggleGame getGame(@PathVariable String id) {
-        if(boggleGameMap.containsKey(id)) {
-            return boggleGameMap.get(id);
-        }
-        throw new UnsupportedOperationException("This id does not exist");
+
+    @MessageMapping("/addWord")
+    public void addWord(@Payload AddWordRequest addWordRequest) {
+        log.info("New word add request: " + addWordRequest);
+        Lobby lobby = lobbyMap.getLobby(addWordRequest.getLobbyId());
+        if(lobby == null) return;
+        Player player = lobby.getPlayer(addWordRequest.getPlayerId());
+        if(player == null) return;
+        lobby.addWord(addWordRequest.getPlayerId(), addWordRequest.getWord());
     }
-    
-    @PostMapping("/game/{id}")
-    public BoggleGame joinGame(@PathVariable String id, HttpSession session) {
-        if(boggleGameMap.containsKey(id)) {
-            session.setAttribute(GAME_ID_ATTRIBUTE, id);
-            return boggleGameMap.get(id);
-        }
-        throw new UnsupportedOperationException("This id does not exist");
+
+    private void scheduleEndGame(Lobby lobby, int gameDuration) {
+        Timer endGameTimer = new Timer();
+        endGameTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                endGame(lobby);
+            }
+        }, gameDuration);
+    }
+
+    private void endGame(Lobby lobby) {
+        lobby.setGameStatus(GameStatus.FINISHED);
+        String destination = lobby.getLobbyTopic("/endGame");
+        log.info(String.format("Ending game for lobby %s, sending information to %s", lobby.getId(), destination));
+        simpMessagingTemplate.convertAndSend(destination, lobby);
     }
 }
