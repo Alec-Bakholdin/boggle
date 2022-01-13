@@ -12,6 +12,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -24,15 +26,15 @@ public class BoggleGameController {
     private final LobbyMap lobbyMap;
 
 
-    @MessageMapping("/startGame")
-    public void startGame(@Payload String lobbyId) {
+    @PostMapping("/startGame/{lobbyId}")
+    public void startGame(@PathVariable String lobbyId) {
         log.info("New lobby start request: " + lobbyId);
         Lobby lobby = lobbyMap.get(lobbyId);
         if (lobby == null) {
             return;
         }
         lobby.startNewGame();
-        int gameDuration = 5 * 1000;
+        int gameDuration = 3 * 60 * 1000;
         lobby.getGame().setGameOverTime(System.currentTimeMillis() + gameDuration);
         scheduleEndGame(lobby, gameDuration);
 

@@ -40,6 +40,7 @@ public class Game implements Serializable {
         if(wordStr.length() <= 0) {
             return false;
         }
+        wordStr = wordStr.replace("QU", "Q");
         Set<Point> startLocations = board.getCharLocations(wordStr.charAt(0));
         String nextSubstring = wordStr.substring(1);
         for(Point point : startLocations) {

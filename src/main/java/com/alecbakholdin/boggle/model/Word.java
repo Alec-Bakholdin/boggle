@@ -16,6 +16,8 @@ public class Word {
                 return 11;
             }
             return word.length() - 3;
+        } else if(!canBeMade || !isValidWord) {
+            return -1;
         }
         return 0;
     }

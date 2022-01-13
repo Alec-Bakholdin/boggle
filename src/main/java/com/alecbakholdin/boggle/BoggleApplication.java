@@ -19,7 +19,7 @@ public class BoggleApplication {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowCredentials(true)
-                        .allowedOrigins("http://localhost:3000", "http://74.102.204.78:3000")
+                        .allowedOriginPatterns("http://localhost:*")
                         .allowedMethods("*");
             }
         };

@@ -25,9 +25,6 @@ public class LobbyMap extends HashMap<String, Lobby> {
     }
 
     public Lobby getLobby(String lobbyId) {
-        if(!this.containsKey(lobbyId)){
-            throw new UnsupportedOperationException(String.format("BoggleLobby %s does not exist", lobbyId));
-        }
         return this.get(lobbyId);
     }
 }

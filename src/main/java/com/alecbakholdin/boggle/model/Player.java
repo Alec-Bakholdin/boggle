@@ -9,6 +9,7 @@ import lombok.ToString;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Data
 public class Player {
@@ -39,5 +40,20 @@ public class Player {
         return words.stream()
                 .map(Word::getScore)
                 .reduce(0, Integer::sum);
+    }
+
+    @JsonProperty("words")
+    private List<Word> getSortedWords() {
+        List<Word> duplicateWords = getWordList(true);
+        List<Word> nonDuplicateWords = getWordList(false);
+        nonDuplicateWords.addAll(duplicateWords);
+        return nonDuplicateWords;
+    }
+
+    private List<Word> getWordList(boolean getDuplicates) {
+        return words.stream()
+                .filter(word -> word.isDuplicate() == getDuplicates)
+                .sorted((a, b) -> b.getWord().length() - a.getWord().length())
+                .collect(Collectors.toList());
     }
 }

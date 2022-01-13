@@ -16,8 +16,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
         stompEndpointRegistry
                 .addEndpoint("/boggle-socket")
-                .setAllowedOrigins("http://localhost:3000", "http://74.102.204.78:3000")
-                .withSockJS();
+                .setAllowedOriginPatterns("http://localhost:*", "http://74.102.204.78:*");
     }
 
     @Override

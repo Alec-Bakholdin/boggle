@@ -28,7 +28,6 @@ public class PlayerLifespanTracker {
         Timer oldTimer = timers.get(playerId);
         Player player = players.get(playerId);
         if(oldTimer == null || player == null) {
-            log.info(String.format("One of these was null, oldTimer: %s, player: %s", oldTimer, player));
             return;
         }
         oldTimer.cancel();
@@ -46,7 +45,7 @@ public class PlayerLifespanTracker {
             }
         };
         Timer timer = new Timer();
-        timer.schedule(task, 3000);
+        timer.schedule(task, 900);
         return timer;
     }
 }

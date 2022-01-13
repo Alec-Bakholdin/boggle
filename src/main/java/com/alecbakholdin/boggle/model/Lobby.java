@@ -2,6 +2,7 @@ package com.alecbakholdin.boggle.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
+import lombok.Synchronized;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ public class Lobby {
         return String.format("/topic/game/%s/%s", id, topic);
     }
 
+    @Synchronized
     public Player getPlayer(String playerId) {
         List<Player> matchingPlayers = players.stream()
                 .filter(player -> player.getPlayerId().equals(playerId))
@@ -49,16 +51,19 @@ public class Lobby {
         player.addWord(wordObj);
     }
 
+    @Synchronized
     public void addPlayer(Player player) {
         players.add(player);
         player.setLobby(this);
     }
 
+    @Synchronized
     public void removePlayer(Player player) {
         removedPlayers.add(player);
         players.remove(player);
     }
 
+    @Synchronized
     public void deletePlayer(Player player) {
         removedPlayers.remove(player);
         players.remove(player);
