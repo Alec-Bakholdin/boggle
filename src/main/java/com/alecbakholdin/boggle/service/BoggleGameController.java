@@ -32,7 +32,7 @@ public class BoggleGameController {
             return;
         }
         lobby.startNewGame();
-        int gameDuration = 5 * 1000;
+        int gameDuration = 3 * 60 * 1000;
         lobby.getGame().setGameOverTime(System.currentTimeMillis() + gameDuration);
         scheduleEndGame(lobby, gameDuration);
 
